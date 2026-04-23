@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 WEBHOOK_URL = "https://discord.com/api/webhooks/your_webhook_here"  # Replace with actual if needed
 
 # NOC Engineer Email Configuration
-NOC_EMAIL = "mesalonideshmukh@gmail.com"
+NOC_EMAIL = "noc.engg.team@gmail.com"
 SENDER_EMAIL = "shaggi8536@gmail.com"  # Add your Gmail address here
 SENDER_PASSWORD = "dihs zmvr ohni kwyj"  # Add your Gmail App Password here (NOT regular password if 2FA is enabled)
 

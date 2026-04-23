@@ -60,8 +60,8 @@ def validate_ip(ip):
 
 if __name__ == "__main__":
     # Example corporate use case: Block suspicious IP
-    src_ip = input("Enter source IP to block: ")
-    dst_ip = input("Enter destination IP/network: ")
-    action = input("Enter action (deny/allow) [deny]: ") or "deny"
+    src_ip = input("Enter source IP/CIDR: ")
+    dst_ip = input("Enter destination IP/CIDR: ")
+    action = input("Enter action (deny/allow): ") or "deny"
     
     push_firewall_policy(src_ip, dst_ip, action)
