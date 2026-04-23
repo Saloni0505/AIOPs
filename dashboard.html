@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title style="font-family: 'Times New Roman', Times, serif;">AIOps Network Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0b0f1a; color: #e2e8f0; }
+        .glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; }
+        .status-up { color: #10b981; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; }
+        .status-down { color: #ef4444; background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; }
+        .logs { 
+            background-color: #000000; 
+            font-family: 'Courier New', monospace; 
+            border: 1px solid #334155; 
+            color: #4ade80;
+        }
+        input, select { background: #1e293b !important; border: 1px solid #334155 !important; color: white !important; }
+        button.primary { background: #3b82f6; transition: all 0.3s; }
+        button.primary:hover { background: #2563eb; transform: translateY(-1px); }
+        button.secondary { background: #475569; transition: all 0.3s; }
+        button.secondary:hover { background: #334155; }
+    </style>
+    <script>
+        /* YOUR ORIGINAL JAVASCRIPT LOGIC - UNTOUCHED */
+        function refreshData() {
+            fetch('/get-config')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('hostname').innerText = data.hostname;
+                    const interfacesDiv = document.getElementById('interfaces');
+                    interfacesDiv.innerHTML = '';
+                    for (const [intf, details] of Object.entries(data.interfaces)) {
+                        const div = document.createElement('div');
+                        // Mapping your logic to new CSS classes
+                        div.className = `p-3 mb-2 rounded-lg text-sm font-medium status-${details.status}`;
+                        div.innerText = `${intf}: ${details.status.toUpperCase()} — ${details.description}`;
+                        interfacesDiv.appendChild(div);
+                    }
+                    
+                    const firewallDiv = document.getElementById('firewall');
+                    firewallDiv.innerHTML = '<h3 class="text-lg font-semibold mb-3">Active Firewall Policies</h3>';
+                    data.firewall.policies.forEach(rule => {
+                        const ruleDiv = document.createElement('div');
+                        ruleDiv.className = 'p-3 mb-2 rounded glass flex justify-between items-center text-xs border-l-4 ' + (rule.enabled ? 'border-blue-500' : 'border-gray-600 opacity-50');
+                        ruleDiv.innerHTML = `
+                            <div>
+                                <span class="font-bold text-blue-400">#${rule.id} ${rule.name}</span><br>
+                                ${rule.src} <span class="text-gray-500">→</span> ${rule.dst}
+                            </div>
+                            <div class="text-right">
+                                <span class="uppercase font-bold ${rule.action === 'allow' ? 'text-green-400' : 'text-red-400'}">${rule.action}</span><br>
+                                <span class="text-[10px]">${rule.enabled ? 'ENABLED' : 'DISABLED'}</span>
+                            </div>
+                        `;
+                        firewallDiv.appendChild(ruleDiv);
+                    });
+                });
+            fetch('/get-logs')
+                .then(response => response.text())
+                .then(logs => {
+                    const logContainer = document.getElementById('logs');
+                    logContainer.innerText = logs;
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                });
+        }
+        
+        function addRule() {
+            const src = document.getElementById('src').value;
+            const dst = document.getElementById('dst').value;
+            const action = document.getElementById('action').value;
+            const name = document.getElementById('rulename').value || `Rule_${Date.now()}`;
+            
+            fetch('/add-firewall-rule', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({src, dst, action, name})
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || data.error);
+                refreshData();
+            });
+        }
+        setInterval(refreshData, 2000);
+        window.onload = refreshData;
+    </script>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-8 pb-6 border-b border-slate-800">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">AIOps <span class="text-blue-500">Network Intelligence</span></h1>
+                <p class="text-slate-500 text-sm">System Node: <span id="hostname" class="font-mono text-blue-400">--</span></p>
+            </div>
+            <div class="space-x-2">
+                <button onclick="fetch('/reset', {method: 'POST'}).then(() => refreshData())" class="secondary text-white px-4 py-2 rounded-lg text-sm font-semibold">Reset Interface</button>
+                <button onclick="fetch('/run-ai', {method: 'POST'}).then(() => refreshData())" class="primary text-white px-4 py-2 rounded-lg text-sm font-semibold">Run AI Agent</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="space-y-6">
+                <section class="glass p-5">
+                    <h2 class="text-sm uppercase tracking-widest text-slate-400 font-bold mb-4">Interface Status</h2>
+                    <div id="interfaces">
+                        </div>
+                </section>
+
+                <section class="glass p-5">
+                    <h2 class="text-sm uppercase tracking-widest text-slate-400 font-bold mb-4">Add Firewall Rule</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="rulename" placeholder="Rule Name" class="w-full px-3 py-2 rounded text-sm outline-none">
+                        <input type="text" id="src" placeholder="Source IP (Required)" class="w-full px-3 py-2 rounded text-sm outline-none" required>
+                        <input type="text" id="dst" placeholder="Destination IP (Required)" class="w-full px-3 py-2 rounded text-sm outline-none" required>
+                        <select id="action" class="w-full px-3 py-2 rounded text-sm outline-none cursor-pointer">
+                            <option value="deny">Deny Access</option>
+                            <option value="allow">Allow Access</option>
+                        </select>
+                        <button onclick="addRule()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition">Deploy Rule</button>
+                    </div>
+                </section>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <section class="glass p-5 min-h-[300px]">
+                    <div id="firewall">
+                        </div>
+                </section>
+
+                <section>
+                    <h2 class="text-sm uppercase tracking-widest text-slate-400 font-bold mb-2 ml-1">System Logs</h2>
+                    <div class="logs h-64 p-4 overflow-y-auto rounded-lg shadow-inner text-xs leading-relaxed" id="logs">
+                        Initializing system log stream...
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
