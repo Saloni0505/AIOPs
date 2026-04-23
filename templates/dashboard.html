@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIOps Network Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .up { background-color: #d4edda; color: #155724; }
+        .down { background-color: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        .logs { background-color: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; height: 200px; overflow-y: scroll; }
+    </style>
+    <script>
+        function refreshData() {
+            fetch('/get-config')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('hostname').innerText = data.hostname;
+                    const interfacesDiv = document.getElementById('interfaces');
+                    interfacesDiv.innerHTML = '';
+                    for (const [intf, details] of Object.entries(data.interfaces)) {
+                        const div = document.createElement('div');
+                        div.className = `status ${details.status}`;
+                        div.innerText = `${intf}: ${details.status} (${details.description})`;
+                        interfacesDiv.appendChild(div);
+                    }
+                    
+                    // Display firewall rules
+                    const firewallDiv = document.getElementById('firewall');
+                    firewallDiv.innerHTML = '<h3>Firewall Policies</h3>';
+                    data.firewall.policies.forEach(rule => {
+                        const ruleDiv = document.createElement('div');
+                        ruleDiv.className = 'status ' + (rule.enabled ? 'up' : 'down');
+                        ruleDiv.innerText = `${rule.id}. ${rule.name}: ${rule.src} -> ${rule.dst} (${rule.action}) [${rule.enabled ? 'Enabled' : 'Disabled'}]`;
+                        firewallDiv.appendChild(ruleDiv);
+                    });
+                });
+            fetch('/get-logs')
+                .then(response => response.text())
+                .then(logs => {
+                    document.getElementById('logs').innerText = logs;
+                });
+        }
+        
+        function addRule() {
+            const src = document.getElementById('src').value;
+            const dst = document.getElementById('dst').value;
+            const action = document.getElementById('action').value;
+            const name = document.getElementById('rulename').value || `Rule_${Date.now()}`;
+            
+            fetch('/add-firewall-rule', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({src, dst, action, name})
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || data.error);
+                refreshData();
+            });
+        }
+        setInterval(refreshData, 2000); // Refresh every 2 seconds
+        window.onload = refreshData;
+    </script>
+</head>
+<body>
+    <h1>AIOps Network Dashboard</h1>
+    <h2>Network Status</h2>
+    <p>Hostname: <span id="hostname"></span></p>
+    <div id="interfaces"></div>
+    <button onclick="fetch('/reset', {method: 'POST'}).then(() => refreshData())">Reset Interface</button>
+    <button onclick="fetch('/run-ai', {method: 'POST'}).then(() => refreshData())">Run AI Agent</button>
+    <div id="firewall"></div>
+    <h3>Add Firewall Rule</h3>
+    <input type="text" id="rulename" placeholder="Rule Name (optional)">
+    <input type="text" id="src" placeholder="Source IP/Network" required>
+    <input type="text" id="dst" placeholder="Destination IP/Network" required>
+    <select id="action">
+        <option value="deny">Deny</option>
+        <option value="allow">Allow</option>
+    </select>
+    <button onclick="addRule()">Add Rule</button>
+    <h2>System Logs</h2>
+    <div class="logs" id="logs"></div>
+</body>
+</html>
