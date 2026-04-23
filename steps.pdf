@@ -1,0 +1,47 @@
+# Steps to Add Workspace to Git Repository
+
+## Overview
+The workspace at `e:\AIops` was connected to the existing Git repository at `https://github.com/Saloni0505/AIOPs` and the local files were committed and pushed to the `Branch-2---SM` branch (assumed to be the "sm" branch mentioned).
+
+## Steps Performed
+
+1. **Checked Git Status**:
+   - Ran `git status` to confirm the workspace was already initialized as a Git repository on the `master` branch with untracked files.
+
+2. **Verified Remote Repository**:
+   - Ran `git remote -v` to check existing remotes. The origin was already set to `https://github.com/Saloni0505/AIOPs`.
+
+3. **Fetched Remote Branches**:
+   - Ran `git fetch origin` to retrieve the latest branches from the remote repository. This brought in branches: `Branch-1--HD`, `Branch-2---SM`, and `main`.
+
+4. **Listed Remote Branches**:
+   - Ran `git branch -r` to confirm the available remote branches.
+
+5. **Switched to the Target Branch**:
+   - Ran `git checkout -b Branch-2---SM origin/Branch-2---SM` to create and switch to a local branch tracking the remote `Branch-2---SM` branch.
+
+6. **Staged Files**:
+   - Ran `git add .` to stage all untracked and modified files in the workspace.
+
+7. **Committed Changes**:
+   - Ran `git commit -m "Add AIops project files"` to create a commit with the staged files.
+
+8. **Pushed to Remote**:
+   - Ran `git push` to upload the commit to the remote `Branch-2---SM` branch.
+
+## Notes
+- The "sm" branch was interpreted as `Branch-2---SM` based on the fetched branches. If this is incorrect, switch to the correct branch using `git checkout <correct-branch-name>`.
+- Authentication may be required for pushing; VS Code handles GitHub authentication.
+- The workspace files are now part of the repository on the specified branch.
+
+## Commands Summary
+```
+git status
+git remote -v
+git fetch origin
+git branch -r
+git checkout -b Branch-2---SM origin/Branch-2---SM
+git add .
+git commit -m "Add AIops project files"
+git push
+```
