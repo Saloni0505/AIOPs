@@ -8,7 +8,7 @@ This is a comprehensive AIOps demo with network monitoring, AI-driven remediatio
 - **Log Analyzer** (`log_analyzer.py`): AI-based log analysis for anomaly detection and alerting.
 - **Firewall Policy Manager** (`firewall_policy.py`): Corporate-level security policy push with validation.
 - **Reset Script** (`reset.py`): Resets demo state.
-- **Web Dashboard**: Interactive interface at `http://localhost:5000` for monitoring and control.
+- **Web Dashboard**: Interactive interface at `http://localhost:5001` for monitoring and control.
 
 ## Advanced Use Cases
 1. **Network Anomaly Detection**: AI monitors interfaces and auto-heals failures.
@@ -28,7 +28,7 @@ This is a comprehensive AIOps demo with network monitoring, AI-driven remediatio
    - Run log analyzer
 
 ## CLI Commands
-- **Start Server**: `python router_api.py` (port 5001)
+- **Start Server**: ``python router_api.py`` (port 5001)
 - **Reset Demo**: `python reset.py`
 - **Run AI Agent**: `python ai_agent.py`
 - **Analyze Logs**: `python log_analyzer.py`

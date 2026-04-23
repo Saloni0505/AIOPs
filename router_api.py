@@ -7,7 +7,9 @@ config = {
     "hostname": "Core-Switch-01",
     "interfaces": {
         "GigabitEthernet0/1": {"status": "up", "description": "Uplink"},
-        "GigabitEthernet0/2": {"status": "down", "description": "User-VLAN"}
+        "GigabitEthernet0/2": {"status": "down", "description": "User-VLAN"},
+        "GigabitEthernet0/3": {"status": "down", "description": "DMZ"},
+        "GigabitEthernet0/4": {"status": "up", "description": "Management"}
     },
     "firewall": {
         "policies": [
@@ -22,6 +24,7 @@ print("Config loaded:", config)  # Debug at startup
 logs = [
     "2026-04-23 10:00:01 INFO: System started.",
     "2026-04-23 10:05:22 CRITICAL: Interface Gi0/2 is DOWN (Link Failure)",
+    "2026-04-23 10:06:10 CRITICAL: Interface Gi0/3 is DOWN (Packet Loss)",
 ]
 
 @app.route('/')
@@ -36,15 +39,25 @@ def get_config():
 
 @app.route('/fix-interface', methods=['POST'])
 def fix_interface():
-    config["interfaces"]["GigabitEthernet0/2"]["status"] = "up"
-    logs.append("2026-04-23 10:05:25 INFO: AI Agent executed 'no shutdown' on Gi0/2.")
-    return jsonify({"message": "Command 'no shutdown' executed by AI Agent."})
+    request_data = request.get_json(silent=True) or {}
+    interface = request_data.get("interface", "GigabitEthernet0/2")
+    if interface not in config["interfaces"]:
+        return jsonify({"error": f"Interface {interface} not found."}), 404
+
+    config["interfaces"][interface]["status"] = "up"
+    logs.append(f"2026-04-23 10:05:25 INFO: AI Agent executed 'no shutdown' on {interface}.")
+    return jsonify({"message": f"Command 'no shutdown' executed on {interface} by AI Agent."})
 
 @app.route('/reset', methods=['POST'])
 def reset():
-    config["interfaces"]["GigabitEthernet0/2"]["status"] = "down"
-    logs.append("2026-04-23 10:05:26 INFO: Interface Gi0/2 reset to down for demo.")
-    return jsonify({"message": "Interface reset to down for demo."})
+    request_data = request.get_json(silent=True) or {}
+    interface = request_data.get("interface", "GigabitEthernet0/2")
+    if interface not in config["interfaces"]:
+        return jsonify({"error": f"Interface {interface} not found."}), 404
+
+    config["interfaces"][interface]["status"] = "down"
+    logs.append(f"2026-04-23 10:05:26 INFO: Interface {interface} reset to down for demo.")
+    return jsonify({"message": f"Interface {interface} reset to down for demo."})
 
 @app.route('/get-logs', methods=['GET'])
 def get_logs():
@@ -75,19 +88,16 @@ def add_firewall_rule():
 
 @app.route('/run-ai', methods=['POST'])
 def run_ai():
-    import requests
-    import json
     # Simulate AI logic here
-    data = config
-    network_state = json.dumps(data)
-    if "down" in network_state:
-        logs.append("2026-04-23 10:05:27 INFO: AI Agent detected anomaly: Interface Gi0/2 DOWN.")
-        # Trigger fix
-        fix_interface()
-        logs.append("2026-04-23 10:05:28 INFO: AI Agent triggered remediation.")
+    down_interfaces = [name for name, info in config["interfaces"].items() if info.get("status") == "down"]
+    if down_interfaces:
+        interface = down_interfaces[0]
+        logs.append(f"2026-04-23 10:05:27 INFO: AI Agent detected anomaly: Interface {interface} DOWN.")
+        config["interfaces"][interface]["status"] = "up"
+        logs.append(f"2026-04-23 10:05:28 INFO: AI Agent triggered remediation on {interface}.")
     else:
         logs.append("2026-04-23 10:05:29 INFO: AI Agent: Network healthy.")
     return jsonify({"message": "AI Agent run complete."})
 
 if __name__ == '__main__':
-    app.run(port=5001)
+    app.run(port=5001, debug=True)

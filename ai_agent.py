@@ -9,13 +9,15 @@ def run_aiops_cycle():
     
     print("AI Agent: Analyzing data...")
     time.sleep(1)
-    network_state = json.dumps(data)
-    
-    if "down" in network_state:
-        print("  AI Analysis: Anomaly detected! Interface Gi0/2 is DOWN. Policy requires 100% uptime.")
+    interfaces = data.get("interfaces", {})
+    down_interfaces = [name for name, info in interfaces.items() if info.get("status") == "down"]
+
+    if down_interfaces:
+        interface = down_interfaces[0]
+        print(f"  AI Analysis: Anomaly detected! Interface {interface} is DOWN. Policy requires 100% uptime.")
         print(" AI Action: Executing remediation script...")
         time.sleep(1)
-        remediation = requests.post("http://localhost:5001/fix-interface")
+        remediation = requests.post("http://localhost:5001/fix-interface", json={"interface": interface})
         print(f"✅ Result: {remediation.json()['message']}")
         print(" Network healed!")
     else:
