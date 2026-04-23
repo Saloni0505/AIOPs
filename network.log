@@ -1,0 +1,3 @@
+2026-04-23 10:00:01 INFO: Interface Gi0/1 is UP
+2026-04-23 10:05:22 CRITICAL: Interface Gi0/2 is DOWN (Link Failure)
+2026-04-23 10:05:25 INFO: Interface Gi0/2 is UP
