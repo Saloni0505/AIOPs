@@ -80,6 +80,11 @@
             .then(response => response.json())
             .then(data => {
                 alert(data.message || data.error);
+                if (!data.error) {
+                    document.getElementById('rulename').value = '';
+                    document.getElementById('src').value = '';
+                    document.getElementById('dst').value = '';
+                }
                 refreshData();
             });
         }
@@ -120,7 +125,7 @@
                             <option value="deny">Deny Access</option>
                             <option value="allow">Allow Access</option>
                         </select>
-                        <button onclick="addRule()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition">Deploy Rule</button>
+                        <button type="button" onclick="addRule()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition">Deploy Rule</button>
                     </div>
                 </section>
             </div>
